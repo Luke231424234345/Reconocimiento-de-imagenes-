@@ -11,30 +11,41 @@ import os
 MODEL_PATH = "modelo_Antirobos.keras"
 
 # 📌 ETIQUETAS DEFINIDAS MANUALMENTE (AJÚSTALAS SEGÚN TU MODELO)
-LABELS = ["sin casco/tapabocas", "con casco", "con tapabocas", "otros"]
+LABELS = ["con gorra", "con casco", "con tapabocas", "otros"]
 
 # 📌 FUNCIÓN PARA DETECTAR ROSTROS Y CLASIFICARLOS
 def detect_faces(image, model):
     detector = MTCNN()
-    img_rgb = cv2.cvtColor(np.array(image), cv2.COLOR_BGR2RGB)
+    img_rgb = cv2.cvtColor(np.array(image), cv2.COLOR_BGR2RGB)  # Convertir imagen a RGB
+    
+    # Detectar rostros
     faces = detector.detect_faces(img_rgb)
     
     for face in faces:
         x, y, w, h = face['box']
         x, y = max(0, x), max(0, y)
         face_crop = img_rgb[y:y+h, x:x+w]
+        
+        # Preprocesar la imagen del rostro
         face_crop = cv2.resize(face_crop, (224, 224))
         face_crop = np.expand_dims(face_crop / 255.0, axis=0)
         
+        # Predicción del modelo
         prediction = model.predict(face_crop)
         class_index = np.argmax(prediction)
         class_name = LABELS[class_index]
         confidence = prediction[0][class_index]
         
+        # Establecer color y etiqueta
         color = (0, 255, 0) if class_name == "otros" else (255, 0, 0)
+        
+        # Dibuja el rectángulo alrededor del rostro
         cv2.rectangle(img_rgb, (x, y), (x + w, y + h), color, 2)
+        
+        # Agregar texto con la clase predicha
         cv2.putText(img_rgb, f"{class_name} ({confidence:.2f})", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
     
+    # Convertir la imagen modificada de nuevo a formato PIL para Streamlit
     return Image.fromarray(img_rgb)
 
 # 📌 INTERFAZ DE STREAMLIT
@@ -55,6 +66,8 @@ if option == "Imagen":
     if uploaded_file:
         image = Image.open(uploaded_file)
         st.image(image, caption="Imagen Original", use_column_width=True)
+        
+        # Procesar la imagen y mostrar la detección de rostros con predicción
         processed_image = detect_faces(image, model)
         st.image(processed_image, caption="Detección de Rostros", use_column_width=True)
 
