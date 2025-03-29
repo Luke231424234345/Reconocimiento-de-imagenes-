@@ -7,31 +7,14 @@ from mtcnn import MTCNN
 from PIL import Image
 import os
 
-# 📌 MONTA GOOGLE DRIVE SI ESTÁS EN GOOGLE COLAB
-if "google.colab" in str(getattr(__import__("sys"), "modules", {})):
-    from google.colab import drive
-    drive.mount('/content/drive')
-    DATASET_PATH = "/content/drive/My Drive/dataset_faces"
-    MODEL_PATH = "/content/drive/My Drive/modelo_Antirobos.keras"
-else:
-    DATASET_PATH = "dataset_faces"  # Ruta local del dataset
-    MODEL_PATH = "modelo_Antirobos.keras"  # Ruta local del modelo
+# 📌 RUTA DEL MODELO (AJÚSTALA SI ES NECESARIO)
+MODEL_PATH = "modelo_Antirobos.keras"
 
-# 📌 FUNCIÓN PARA CARGAR LAS ETIQUETAS (NOMBRES DE CLASES)
-def load_labels(dataset_path):
-    if not os.path.exists(dataset_path):
-        st.error(f"❌ No se encontró el dataset en {dataset_path}. Asegúrate de que está montado correctamente.")
-        return []
-    
-    labels = sorted([name for name in os.listdir(dataset_path) if os.path.isdir(os.path.join(dataset_path, name))])
-    
-    if not labels:
-        st.warning("⚠️ El dataset está vacío o mal estructurado. Debe contener carpetas con nombres de clases.")
-    
-    return labels
+# 📌 ETIQUETAS DEFINIDAS MANUALMENTE (AJÚSTALAS SEGÚN TU MODELO)
+LABELS = ["sin casco/tapabocas", "con casco", "con tapabocas", "otros"]
 
 # 📌 FUNCIÓN PARA DETECTAR ROSTROS Y CLASIFICARLOS
-def detect_faces(image, model, labels):
+def detect_faces(image, model):
     detector = MTCNN()
     img_rgb = cv2.cvtColor(np.array(image), cv2.COLOR_BGR2RGB)
     faces = detector.detect_faces(img_rgb)
@@ -45,7 +28,7 @@ def detect_faces(image, model, labels):
         
         prediction = model.predict(face_crop)
         class_index = np.argmax(prediction)
-        class_name = labels[class_index]
+        class_name = LABELS[class_index]
         confidence = prediction[0][class_index]
         
         color = (0, 255, 0) if class_name == "otros" else (255, 0, 0)
@@ -57,16 +40,12 @@ def detect_faces(image, model, labels):
 # 📌 INTERFAZ DE STREAMLIT
 st.title("🔍 Detección de Intrusos con IA")
 
-# 📌 CARGA DEL MODELO Y EL DATASET
+# 📌 CARGA DEL MODELO
 if os.path.exists(MODEL_PATH):
     model = load_model(MODEL_PATH)
 else:
     st.error(f"❌ No se encontró el modelo en {MODEL_PATH}. Asegúrate de que está en la ubicación correcta.")
     st.stop()
-
-labels = load_labels(DATASET_PATH)
-if not labels:
-    st.stop()  # Detiene la app si no hay etiquetas
 
 # 📌 OPCIONES DE DETECCIÓN
 option = st.sidebar.selectbox("Selecciona una opción", ["Imagen", "Video en Tiempo Real"])
@@ -76,7 +55,7 @@ if option == "Imagen":
     if uploaded_file:
         image = Image.open(uploaded_file)
         st.image(image, caption="Imagen Original", use_column_width=True)
-        processed_image = detect_faces(image, model, labels)
+        processed_image = detect_faces(image, model)
         st.image(processed_image, caption="Detección de Rostros", use_column_width=True)
 
 elif option == "Video en Tiempo Real":
