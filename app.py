@@ -11,7 +11,7 @@ import os
 MODEL_PATH = "modelo_Antirobos.keras"
 
 # 📌 ETIQUETAS DEFINIDAS MANUALMENTE (AJÚSTALAS SEGÚN TU MODELO)
-LABELS = ["con gorra", "con casco", "con tapabocas", "otros"]
+LABELS = ["sin casco/tapabocas", "con casco", "con tapabocas", "otros"]
 
 # 📌 FUNCIÓN PARA DETECTAR ROSTROS Y CLASIFICARLOS
 def detect_faces(image, model):
@@ -65,11 +65,10 @@ if option == "Imagen":
     uploaded_file = st.file_uploader("Sube una imagen", type=["jpg", "png", "jpeg"])
     if uploaded_file:
         image = Image.open(uploaded_file)
-        st.image(image, caption="Imagen Original", use_column_width=True)
-        
+        st.image(image, caption="Imagen Original", use_container_width=True)  # Cambiado a use_container_width
         # Procesar la imagen y mostrar la detección de rostros con predicción
         processed_image = detect_faces(image, model)
-        st.image(processed_image, caption="Detección de Rostros", use_column_width=True)
+        st.image(processed_image, caption="Detección de Rostros", use_container_width=True)  # Cambiado a use_container_width
 
 elif option == "Video en Tiempo Real":
     st.warning("⚠️ Función en desarrollo para transmisión en tiempo real en Streamlit.")
