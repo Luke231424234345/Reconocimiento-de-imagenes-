@@ -5,12 +5,32 @@ import tensorflow as tf
 from keras.models import load_model
 from mtcnn import MTCNN
 from PIL import Image
-import tempfile
 import os
 
-def load_labels(dataset_path):
-    return sorted([name for name in os.listdir(dataset_path) if os.path.isdir(os.path.join(dataset_path, name))])
+# 📌 MONTA GOOGLE DRIVE SI ESTÁS EN GOOGLE COLAB
+if "google.colab" in str(getattr(__import__("sys"), "modules", {})):
+    from google.colab import drive
+    drive.mount('/content/drive')
+    DATASET_PATH = "/content/drive/My Drive/dataset_faces"
+    MODEL_PATH = "/content/drive/My Drive/modelo_Antirobos.keras"
+else:
+    DATASET_PATH = "dataset_faces"  # Ruta local del dataset
+    MODEL_PATH = "modelo_Antirobos.keras"  # Ruta local del modelo
 
+# 📌 FUNCIÓN PARA CARGAR LAS ETIQUETAS (NOMBRES DE CLASES)
+def load_labels(dataset_path):
+    if not os.path.exists(dataset_path):
+        st.error(f"❌ No se encontró el dataset en {dataset_path}. Asegúrate de que está montado correctamente.")
+        return []
+    
+    labels = sorted([name for name in os.listdir(dataset_path) if os.path.isdir(os.path.join(dataset_path, name))])
+    
+    if not labels:
+        st.warning("⚠️ El dataset está vacío o mal estructurado. Debe contener carpetas con nombres de clases.")
+    
+    return labels
+
+# 📌 FUNCIÓN PARA DETECTAR ROSTROS Y CLASIFICARLOS
 def detect_faces(image, model, labels):
     detector = MTCNN()
     img_rgb = cv2.cvtColor(np.array(image), cv2.COLOR_BGR2RGB)
@@ -34,13 +54,21 @@ def detect_faces(image, model, labels):
     
     return Image.fromarray(img_rgb)
 
+# 📌 INTERFAZ DE STREAMLIT
 st.title("🔍 Detección de Intrusos con IA")
 
-model_path = "modelo_Antirobos.keras"
-dataset_path = "dataset_faces"
-model = load_model(model_path)
-labels = load_labels(dataset_path)
+# 📌 CARGA DEL MODELO Y EL DATASET
+if os.path.exists(MODEL_PATH):
+    model = load_model(MODEL_PATH)
+else:
+    st.error(f"❌ No se encontró el modelo en {MODEL_PATH}. Asegúrate de que está en la ubicación correcta.")
+    st.stop()
 
+labels = load_labels(DATASET_PATH)
+if not labels:
+    st.stop()  # Detiene la app si no hay etiquetas
+
+# 📌 OPCIONES DE DETECCIÓN
 option = st.sidebar.selectbox("Selecciona una opción", ["Imagen", "Video en Tiempo Real"])
 
 if option == "Imagen":
@@ -52,4 +80,4 @@ if option == "Imagen":
         st.image(processed_image, caption="Detección de Rostros", use_column_width=True)
 
 elif option == "Video en Tiempo Real":
-    st.warning("Función en desarrollo para transmisión en tiempo real en Streamlit.")
+    st.warning("⚠️ Función en desarrollo para transmisión en tiempo real en Streamlit.")
