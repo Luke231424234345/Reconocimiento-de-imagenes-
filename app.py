@@ -42,8 +42,16 @@ def detect_faces(image, model):
         # Dibuja el rectángulo alrededor del rostro
         cv2.rectangle(img_rgb, (x, y), (x + w, y + h), color, 2)
         
-        # Agregar texto con la clase predicha
-        cv2.putText(img_rgb, f"{class_name} ({confidence:.2f})", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+        # **Agregar el texto sobre la imagen de manera más visible**
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        text = f"{class_name} ({confidence:.2f})"
+        text_size = cv2.getTextSize(text, font, 0.5, 1)[0]
+        text_x = x
+        text_y = y - 10
+        
+        # Dibuja un fondo blanco detrás del texto para hacerlo más visible
+        cv2.rectangle(img_rgb, (text_x, text_y - text_size[1]), (text_x + text_size[0], text_y + 5), color, -1)
+        cv2.putText(img_rgb, text, (text_x, text_y), font, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
     
     # Convertir la imagen modificada de nuevo a formato PIL para Streamlit
     return Image.fromarray(img_rgb)
