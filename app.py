@@ -36,7 +36,7 @@ def detect_faces(image, model, labels):
 
 st.title("🔍 Detección de Intrusos con IA")
 
-model_path = "modelo_intrusos.h5"
+model_path = "modelo_Antirobos.h5"
 dataset_path = "dataset_faces"
 model = load_model(model_path)
 labels = load_labels(dataset_path)
