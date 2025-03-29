@@ -26,8 +26,8 @@ def detect_faces(image, model):
         x, y = max(0, x), max(0, y)
         face_crop = img_rgb[y:y+h, x:x+w]
         
-        # Preprocesar la imagen del rostro
-        face_crop = cv2.resize(face_crop, (224, 224))
+        # **Ajustar el tamaño de la imagen del rostro a 128x128, que es lo que espera el modelo**
+        face_crop = cv2.resize(face_crop, (128, 128))  # Cambié de 224x224 a 128x128
         face_crop = np.expand_dims(face_crop / 255.0, axis=0)
         
         # Predicción del modelo
